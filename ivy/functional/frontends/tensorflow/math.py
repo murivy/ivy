@@ -845,3 +845,44 @@ def zero_fraction(value, name="zero_fraction"):
 )
 def zeta(x, q, name=None):
     return ivy.zeta(x, q)
+
+import ivy.functional.frontends.tensorflow as tf_frontend
+@to_ivy_arrays_and_back
+def unsorted_segment_max(data, segment_ids, num_segments, name=None):
+    data=ivy.array(data)
+    segment_ids = ivy.array(segment_ids)
+
+    ivy.utils.assertions.check_equal(
+        list(segment_ids.shape), [list(data.shape)[0]], as_array=False
+    )
+    ivy.utils.assertions.check_greater(
+        int(num_segments),int(ivy.max(segment_ids))
+    )
+    mydict=tf_frontend.tensorflow_enum_to_type
+    ind=list(mydict.keys())[list(mydict.values()).index(data.dtype)]
+    data_dtype = ivy.functional.frontends.tensorflow.dtypes.DType(dtype_int=ind)
+    
+    shape=list(ivy.shape(data))
+    shape[0]=int(num_segments)
+    x=data_dtype.min*ivy.ones(shape)
+    for i in range((segment_ids).shape[0]):
+        x[segment_ids[i]] = ivy.maximum(x[segment_ids[i]], data[i])
+    return x
+
+def unsorted_segment_prod(data, segment_ids, num_segments, name=None):
+    data=ivy.array(data)
+    segment_ids = ivy.array(segment_ids)
+
+    ivy.utils.assertions.check_equal(
+        list(segment_ids.shape), [list(data.shape)[0]], as_array=False
+    )
+    ivy.utils.assertions.check_greater(
+        int(num_segments),int(ivy.max(segment_ids))
+    )
+
+    shape=list(ivy.shape(data))
+    shape[0]=int(num_segments)
+    x=ivy.ones(shape,dtype=data.dtype)
+    for i in range((segment_ids).shape[0]):
+        x[segment_ids[i]] = ivy.multiply(x[segment_ids[i]], data[i])
+    return x

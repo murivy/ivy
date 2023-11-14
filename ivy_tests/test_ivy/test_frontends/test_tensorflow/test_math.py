@@ -3328,3 +3328,132 @@ def test_tensorflow_zeta(
         x=x[0],
         q=x[1],
     )
+
+@st.composite
+def _segment_ops_helper(draw):
+    shape_x = draw(st.integers(min_value=3, max_value=100))
+    shape_y = draw(st.integers(min_value=3, max_value=100))
+    max_val = draw(st.integers(min_value=3, max_value=9))
+
+    dt_dtype = draw(
+        st.sampled_from(
+            [
+                "uint8",
+                "complex64",                
+                "complex128",
+                "float32",
+                "float64",
+                "int8",
+                "int16",
+                "int32",
+                "int64",
+            ]
+        )
+    )
+    s_dtype = draw(
+        st.sampled_from(
+            [
+                "int32",
+                "int64",
+            ]
+        )
+    )
+    data_dtype, data=draw(
+        helpers.dtype_and_values(
+            available_dtypes=[dt_dtype],
+            num_arrays=1,
+            shape=(shape_x,shape_y),
+            min_value=-max_val,
+            max_value=max_val,
+        )
+    )
+    seg_dtype, segment_ids=draw(
+        helpers.dtype_and_values(
+            available_dtypes=[s_dtype],
+            num_arrays=1,
+            shape=(shape_x,),
+            min_value= 0,
+            max_value=max_val,
+            
+        )
+    )
+    return data_dtype + seg_dtype, data, segment_ids, max_val
+
+@handle_frontend_test(
+    fn_tree="tensorflow.math.unsorted_segment_max",
+    params=_segment_ops_helper(),
+    test_with_out=st.just(False),
+)
+def test_tensorflow_unsorted_segment_max(
+    *,
+    params,
+    frontend,
+    test_flags,
+    fn_tree,
+    backend_fw,
+    on_device,
+):
+    dtypes, data, segment_ids, max_val = params
+    helpers.test_frontend_function(
+        input_dtypes=dtypes,
+        backend_to_test=backend_fw,
+        frontend=frontend,
+        test_flags=test_flags,
+        fn_tree=fn_tree,
+        on_device=on_device,
+        data=data[0],
+        segment_ids=segment_ids[0],
+        num_segments= max_val,
+    )
+@handle_frontend_test(
+    fn_tree="tensorflow.math.unsorted_segment_prod",
+    params=_segment_ops_helper(),
+    test_with_out=st.just(False),
+)
+def test_tensorflow_unsorted_segment_prod(
+    *,
+    params,
+    frontend,
+    test_flags,
+    fn_tree,
+    backend_fw,
+    on_device,
+):
+    dtypes, data, segment_ids, max_val = params
+    helpers.test_frontend_function(
+        input_dtypes=dtypes,
+        backend_to_test=backend_fw,
+        frontend=frontend,
+        test_flags=test_flags,
+        fn_tree=fn_tree,
+        on_device=on_device,
+        data=data[0],
+        segment_ids=segment_ids[0],
+        num_segments= max_val,
+    )
+@handle_frontend_test(
+    fn_tree="tensorflow.math.unsorted_segment_max",
+    params=_segment_ops_helper(),
+    test_with_out=st.just(False),
+)
+def test_tensorflow_unsorted_segment_max(
+    *,
+    params,
+    frontend,
+    test_flags,
+    fn_tree,
+    backend_fw,
+    on_device,
+):
+    dtypes, data, segment_ids, max_val = params
+    helpers.test_frontend_function(
+        input_dtypes=dtypes,
+        backend_to_test=backend_fw,
+        frontend=frontend,
+        test_flags=test_flags,
+        fn_tree=fn_tree,
+        on_device=on_device,
+        data=data[0],
+        segment_ids=segment_ids[0],
+        num_segments= max_val,
+    )
